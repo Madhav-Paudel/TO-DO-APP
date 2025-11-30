@@ -135,12 +135,7 @@ fun VoiceAssistantScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             // Header
-            VoiceAssistantHeader(
-                ttsEnabled = uiState.ttsEnabled,
-                onToggleTTS = { viewModel.toggleTTS(it) },
-                isSpeaking = uiState.isSpeaking,
-                onStopSpeaking = { viewModel.stopSpeaking() }
-            )
+            VoiceAssistantHeader()
             
             // Chat messages
             LazyColumn(
@@ -295,12 +290,7 @@ private fun AnimatedBackgroundOrbs() {
 }
 
 @Composable
-private fun VoiceAssistantHeader(
-    ttsEnabled: Boolean,
-    onToggleTTS: (Boolean) -> Unit,
-    isSpeaking: Boolean,
-    onStopSpeaking: () -> Unit
-) {
+private fun VoiceAssistantHeader() {
     val infiniteTransition = rememberInfiniteTransition(label = "avatar")
     val avatarGlow by infiniteTransition.animateFloat(
         initialValue = 0.8f,
@@ -394,27 +384,6 @@ private fun VoiceAssistantHeader(
                         color = Color.White.copy(alpha = 0.7f)
                     )
                 }
-            }
-            
-            // TTS toggle
-            IconButton(
-                onClick = {
-                    if (isSpeaking) {
-                        onStopSpeaking()
-                    } else {
-                        onToggleTTS(!ttsEnabled)
-                    }
-                }
-            ) {
-                Icon(
-                    imageVector = when {
-                        isSpeaking -> Icons.Default.VolumeOff
-                        ttsEnabled -> Icons.Default.VolumeUp
-                        else -> Icons.Outlined.VolumeOff
-                    },
-                    contentDescription = "Toggle TTS",
-                    tint = if (ttsEnabled || isSpeaking) PrimaryPurple else Color.White.copy(alpha = 0.5f)
-                )
             }
         }
     }

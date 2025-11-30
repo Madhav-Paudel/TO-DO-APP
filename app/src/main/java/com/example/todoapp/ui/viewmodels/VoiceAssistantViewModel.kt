@@ -6,8 +6,6 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todoapp.data.local.GoalEntity
@@ -41,10 +39,8 @@ data class VoiceAssistantUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
     val isListening: Boolean = false,
-    val isSpeaking: Boolean = false,
     val speechAmplitude: Float = 0f,
     val currentSessionId: String = UUID.randomUUID().toString(),
-    val ttsEnabled: Boolean = false,  // Disabled by default
     val showApiKeyDialog: Boolean = false,
     val apiKeyConfigured: Boolean = true,
     val error: String? = null,
@@ -72,8 +68,6 @@ class VoiceAssistantViewModel(
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isRecognizerInitialized = false
-    private var textToSpeech: TextToSpeech? = null
-    private var ttsInitialized = false
 
     private val assistantName = "Nova"
     private val greetings = listOf(
@@ -90,32 +84,17 @@ class VoiceAssistantViewModel(
     )
 
     init {
-        initializeTTS()
         loadUserPreferences()
-        loadConversationHistory()
+        // Show welcome message for fresh session (chat clears on app restart)
+        showWelcomeMessage()
     }
-
-    private fun initializeTTS() {
-        textToSpeech = TextToSpeech(application) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                textToSpeech?.language = Locale.US
-                textToSpeech?.setSpeechRate(1.0f)
-                textToSpeech?.setPitch(1.0f)
-                ttsInitialized = true
-                
-                textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String?) {
-                        _uiState.value = _uiState.value.copy(isSpeaking = true)
-                    }
-                    override fun onDone(utteranceId: String?) {
-                        _uiState.value = _uiState.value.copy(isSpeaking = false)
-                    }
-                    override fun onError(utteranceId: String?) {
-                        _uiState.value = _uiState.value.copy(isSpeaking = false)
-                    }
-                })
-            }
-        }
+    
+    private fun showWelcomeMessage() {
+        val welcomeMessage = ChatMessage(
+            sender = ChatSender.ASSISTANT,
+            text = greetings.random()
+        )
+        _uiState.value = _uiState.value.copy(messages = listOf(welcomeMessage))
     }
 
     private fun loadUserPreferences() {
@@ -126,31 +105,7 @@ class VoiceAssistantViewModel(
         }
     }
 
-    private fun loadConversationHistory() {
-        viewModelScope.launch {
-            val recent = memoryRepository.getRecentConversations(20)
-            if (recent.isEmpty()) {
-                val welcomeMessage = ChatMessage(
-                    sender = ChatSender.ASSISTANT,
-                    text = greetings.random()
-                )
-                _uiState.value = _uiState.value.copy(messages = listOf(welcomeMessage))
-            } else {
-                val messages = recent.reversed().map { conv ->
-                    ChatMessage(
-                        sender = when (conv.role) {
-                            "user" -> ChatSender.USER
-                            "assistant" -> ChatSender.ASSISTANT
-                            else -> ChatSender.SYSTEM
-                        },
-                        text = conv.content,
-                        timestamp = conv.timestamp
-                    )
-                }
-                _uiState.value = _uiState.value.copy(messages = messages)
-            }
-        }
-    }
+
 
     fun initializeSpeechRecognizer() {
         if (!isRecognizerInitialized && SpeechRecognizer.isRecognitionAvailable(application)) {
@@ -205,7 +160,6 @@ class VoiceAssistantViewModel(
 
     fun startListening() {
         if (!isRecognizerInitialized) initializeSpeechRecognizer()
-        stopSpeaking()
         
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -225,27 +179,7 @@ class VoiceAssistantViewModel(
         _uiState.value = _uiState.value.copy(isListening = false, speechAmplitude = 0f)
     }
 
-    fun speak(text: String) {
-        if (ttsInitialized && _uiState.value.ttsEnabled) {
-            val cleanText = text
-                .replace(Regex("[\\p{So}\\p{Cn}]"), "")
-                .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")
-                .replace(Regex("\\*(.+?)\\*"), "$1")
-                .replace(Regex("•"), ",")
-                .replace(Regex("\n+"), ". ")
-            textToSpeech?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
-        }
-    }
 
-    fun stopSpeaking() {
-        textToSpeech?.stop()
-        _uiState.value = _uiState.value.copy(isSpeaking = false)
-    }
-
-    fun toggleTTS(enabled: Boolean) {
-        _uiState.value = _uiState.value.copy(ttsEnabled = enabled)
-        if (!enabled) stopSpeaking()
-    }
 
     fun sendMessage(text: String) {
         if (text.isBlank()) return
@@ -729,7 +663,5 @@ Just talk naturally! 😊""",
     override fun onCleared() {
         super.onCleared()
         speechRecognizer?.destroy()
-        textToSpeech?.stop()
-        textToSpeech?.shutdown()
     }
 }
