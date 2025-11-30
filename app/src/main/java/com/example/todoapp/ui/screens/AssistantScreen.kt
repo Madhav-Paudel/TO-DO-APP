@@ -162,7 +162,7 @@ private fun ChatHeader() {
             
             Column {
                 Text(
-                    text = "Your AI Coach",
+                    text = "AI Assistant (Text Only)",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
