@@ -106,6 +106,13 @@ class AssistantViewModel(
                     return@launch
                 }
 
+                val lightweightResponse = getLightweightResponse(text)
+                if (!_isModelLoaded.value && lightweightResponse != null) {
+                    _chatHistory.value += lightweightResponse
+                    _isLoading.value = false
+                    return@launch
+                }
+
                 // Try LLM if model is loaded
                 if (_isModelLoaded.value) {
                     try {
@@ -545,6 +552,53 @@ Just type naturally - I'll understand! 😊"""
         super.onCleared()
         viewModelScope.launch {
             localAssistantRepository.close()
+        }
+    }
+
+    private fun getLightweightResponse(rawText: String): ChatMessage? {
+        val text = rawText.trim().lowercase(Locale.getDefault())
+        if (text.isBlank()) return null
+
+        return when {
+            listOf("hi", "hello", "hey", "hi there", "hello there").any { candidate ->
+                text == candidate || text.startsWith("$candidate ")
+            } -> {
+                ChatMessage(
+                    sender = ChatSender.ASSISTANT,
+                    text = "Hi there! I'm your built-in coach. Ask me about your goals, tasks, or daily routine to get started."
+                )
+            }
+            text.contains("who are you") || text.contains("what are you") -> {
+                ChatMessage(
+                    sender = ChatSender.ASSISTANT,
+                    text = "I'm your on-device productivity coach. I can help you plan goals, break them into tasks, and keep you motivated."
+                )
+            }
+            text.contains("how do i") && text.contains("use") && text.contains("app") -> {
+                ChatMessage(
+                    sender = ChatSender.ASSISTANT,
+                    text = "Start by creating a goal, then add tasks or start a focus timer. I'm always here if you want suggestions or a progress recap."
+                )
+            }
+            text == "help" || text.contains("what can you do") -> {
+                ChatMessage(
+                    sender = ChatSender.ASSISTANT,
+                    text = "Here's what I can do right away:\n\n• Organize goals and tasks\n• Suggest daily routines\n• Summarize your progress\n• Keep you on track with motivation tips\n\nAsk me to plan your week or list goals to try it out!"
+                )
+            }
+            text.contains("thank") -> {
+                ChatMessage(
+                    sender = ChatSender.ASSISTANT,
+                    text = "Anytime! Keep up the great work toward your goals."
+                )
+            }
+            text.contains("motivate") || text.contains("motivation") -> {
+                ChatMessage(
+                    sender = ChatSender.ASSISTANT,
+                    text = "Progress comes from consistent small wins. Pick one task right now and commit ten focused minutes to it—I'll celebrate with you afterward!"
+                )
+            }
+            else -> null
         }
     }
 }
