@@ -18,7 +18,7 @@ import com.example.todoapp.ui.screens.HomeScreen
 import com.example.todoapp.ui.screens.OnboardingScreen
 import com.example.todoapp.ui.screens.SettingsScreen
 import com.example.todoapp.ui.screens.TasksScreen
-import com.example.todoapp.ui.screens.VoiceAssistantScreen
+import com.example.todoapp.ui.screens.AssistantScreen
 
 private const val PREFS_NAME = "todoapp_prefs"
 private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
@@ -111,7 +111,7 @@ fun Navigation(navController: NavHostController) {
             AnalyticsScreen(viewModel = viewModel(factory = AppViewModelProvider.Factory))
         }
         composable(Screen.Assistant.route) {
-            VoiceAssistantScreen(viewModel = viewModel(factory = AppViewModelProvider.Factory))
+            AssistantScreen(viewModel = viewModel(factory = AppViewModelProvider.Factory))
         }
         composable(Screen.Settings.route) {
             SettingsScreen(

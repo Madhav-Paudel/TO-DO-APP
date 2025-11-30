@@ -13,7 +13,6 @@ import com.example.todoapp.ui.viewmodels.ModelManagerViewModel
 import com.example.todoapp.ui.viewmodels.SettingsViewModel
 import com.example.todoapp.ui.viewmodels.TasksViewModel
 import com.example.todoapp.ui.viewmodels.TimerViewModel
-import com.example.todoapp.ui.viewmodels.VoiceAssistantViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
@@ -64,16 +63,6 @@ object AppViewModelProvider {
             SettingsViewModel(
                 toDoApplication().container.settingsDataStore,
                 toDoApplication().container.modelManager
-            )
-        }
-        initializer {
-            VoiceAssistantViewModel(
-                toDoApplication().container.localAssistantRepository,
-                toDoApplication().container.goalRepository,
-                toDoApplication().container.taskRepository,
-                toDoApplication().container.dailyProgressRepository,
-                toDoApplication().container.assistantMemoryRepository,
-                toDoApplication()
             )
         }
         initializer {
