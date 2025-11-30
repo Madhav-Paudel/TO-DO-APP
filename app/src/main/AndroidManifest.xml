@@ -11,9 +11,6 @@
     <!-- Notification permission for reminders -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
-    <!-- Audio recording for voice assistant -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    
     <!-- Vibration for haptic feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
     
