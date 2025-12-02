@@ -22,6 +22,17 @@ class MissedStudyWorker(
     }
 
     override suspend fun doWork(): Result {
+        // Check for notification permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                return Result.failure()
+            }
+        }
+
         val container = (context.applicationContext as ToDoApplication).container
         val goalRepository = container.goalRepository
         val dailyProgressRepository = container.dailyProgressRepository

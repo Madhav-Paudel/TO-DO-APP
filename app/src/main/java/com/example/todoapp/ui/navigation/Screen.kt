@@ -19,6 +19,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Analytics : Screen("analytics", "Analytics", Icons.Default.Analytics)
     object Assistant : Screen("assistant", "Coach", Icons.Default.Face)
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+    object ModelManager : Screen("model_manager", "Model Manager", Icons.Default.Settings)
     object Timer : Screen("timer/{goalId}", "Timer", Icons.Default.Timer) {
         fun createRoute(goalId: Long) = "timer/$goalId"
     }
